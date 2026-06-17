@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>紀念日計算 💗</title>
+<style>
+  :root {
+    --bg1: #1b2030;
+    --bg2: #2a3142;
+    --accent: #ff6fa5;
+    --accent-soft: rgba(255,111,165,0.18);
+    --today: #ff6fa5;
+    --text: #f2f4f8;
+    --muted: #8a93a6;
+    --cell: rgba(255,255,255,0.04);
+    --cell-line: rgba(255,255,255,0.07);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
+    background: linear-gradient(160deg, var(--bg1), var(--bg2));
+    color: var(--text);
+    padding: 18px 14px 40px;
+  }
+  .wrap { max-width: 560px; margin: 0 auto; }
+  h1 { font-size: 1.35rem; font-weight: 600; margin: 6px 0 16px; text-align: center; }
+  h1 .heart { color: var(--accent); }
+
+  .controls {
+    display: flex; gap: 10px; align-items: center;
+    background: var(--cell); border: 1px solid var(--cell-line);
+    border-radius: 14px; padding: 12px; margin-bottom: 14px;
+  }
+  select {
+    flex: 1; appearance: none;
+    background: var(--bg2); color: var(--text);
+    border: 1px solid var(--cell-line); border-radius: 10px;
+    padding: 11px 14px; font-size: 1rem; font-family: inherit;
+  }
+
+  .summary {
+    background: var(--accent-soft);
+    border: 1px solid rgba(255,111,165,0.35);
+    border-radius: 14px; padding: 14px 16px; margin-bottom: 16px;
+  }
+  .summary .name { font-size: 1.05rem; font-weight: 600; }
+  .summary .date { font-size: .85rem; color: var(--muted); margin-top: 2px; }
+  .summary .big {
+    font-size: 2.4rem; font-weight: 700; color: var(--accent);
+    margin-top: 6px; line-height: 1.1;
+  }
+  .summary .big small { font-size: .9rem; color: var(--text); font-weight: 500; }
+
+  .calhead {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .calhead .title { font-size: 1.1rem; font-weight: 600; }
+  .navbtn {
+    background: var(--cell); border: 1px solid var(--cell-line);
+    color: var(--text); width: 38px; height: 38px; border-radius: 10px;
+    font-size: 1.1rem; cursor: pointer;
+  }
+  .navbtn:active { background: var(--accent-soft); }
+  .today-btn {
+    background: var(--accent); color: #fff; border: none;
+    border-radius: 10px; padding: 0 14px; height: 38px; font-size: .9rem;
+    cursor: pointer; margin-left: 8px;
+  }
+
+  .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+  .dow { text-align: center; font-size: .75rem; color: var(--muted); padding: 4px 0; }
+  .cell {
+    background: var(--cell); border: 1px solid var(--cell-line);
+    border-radius: 9px; min-height: 52px; padding: 4px 3px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .cell.empty { background: transparent; border: none; }
+  .cell .d { font-size: .82rem; font-weight: 600; }
+  .cell .cnt { font-size: .62rem; color: var(--muted); margin-top: 2px; }
+  .cell.target { background: var(--accent); border-color: var(--accent); }
+  .cell.target .d, .cell.target .cnt { color: #fff; }
+  .cell.today { outline: 2px solid var(--today); }
+  .cell.today .d { color: var(--today); }
+  .cell.today.target .d { color: #fff; }
+  .cell.zero .cnt { color: var(--accent); font-weight: 700; }
+
+  .legend { margin-top: 14px; font-size: .75rem; color: var(--muted); text-align: center; line-height: 1.6; }
+  .legend b { color: var(--today); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>紀念日天數計算 <span class="heart">💗</span></h1>
+
+  <div class="controls">
+    <select id="eventSelect"></select>
+  </div>
+
+  <div class="summary" id="summary"></div>
+
+  <div class="calhead">
+    <button class="navbtn" id="prev">‹</button>
+    <span class="title" id="monthTitle"></span>
+    <div>
+      <button class="navbtn" id="next">›</button>
+      <button class="today-btn" id="todayBtn">今天</button>
+    </div>
+  </div>
+
+  <div class="grid" id="dowRow"></div>
+  <div class="grid" id="calGrid" style="margin-top:5px;"></div>
+
+  <div class="legend">
+    每格小字＝距離該事件的天數（負數＝還沒到，正數＝已過）<br>
+    <b>粉紅外框＝今天</b>　·　粉紅滿底＝事件當天
+  </div>
+</div>
+
+<script>
+  // 事件清單：日期格式 年/月/日
+  const events = [
+    { name: "阿佩 💗",          date: "2025/12/24" },
+    { name: "跟阿佩第一次見面",  date: "2025/12/09" },
+    { name: "Dcard 抽到阿佩",   date: "2025/10/27" },
+    { name: "佳佩生日",          date: "2000/12/21" },
+    { name: "我的生日",          date: "1998/10/10" },
+  ];
+
+  const MS = 86400000;
+  function ymd(y, m, d) { return new Date(y, m, d); }
+  function parse(s) { const [y,m,d] = s.split("/").map(Number); return ymd(y, m-1, d); }
+  function midnight(dt) { return ymd(dt.getFullYear(), dt.getMonth(), dt.getDate()); }
+  function diffDays(a, b) { return Math.round((midnight(a) - midnight(b)) / MS); }
+
+  const today = midnight(new Date());
+  let viewYear, viewMonth, selectedIdx = 0;
+
+  const selectEl = document.getElementById("eventSelect");
+  events.forEach((e, i) => {
+    const o = document.createElement("option");
+    o.value = i; o.textContent = `${e.name}（${e.date}）`;
+    selectEl.appendChild(o);
+  });
+
+  const dows = ["日","一","二","三","四","五","六"];
+  const dowRow = document.getElementById("dowRow");
+  dows.forEach(d => {
+    const el = document.createElement("div");
+    el.className = "dow"; el.textContent = d; dowRow.appendChild(el);
+  });
+
+  function renderSummary() {
+    const ev = events[selectedIdx];
+    const t = parse(ev.date);
+    const n = diffDays(today, t);
+    let text;
+    if (n === 0) text = `<small>就是今天！</small>`;
+    else if (n > 0) text = `${n}<small> 天前</small>`;
+    else text = `${-n}<small> 天後</small>`;
+    document.getElementById("summary").innerHTML =
+      `<div class="name">${ev.name}</div>
+       <div class="date">目標日期：${ev.date}</div>
+       <div class="big">${text}</div>`;
+  }
+
+  function renderCalendar() {
+    const ev = events[selectedIdx];
+    const target = parse(ev.date);
+    const grid = document.getElementById("calGrid");
+    grid.innerHTML = "";
+    document.getElementById("monthTitle").textContent = `${viewYear} 年 ${viewMonth+1} 月`;
+
+    const first = ymd(viewYear, viewMonth, 1);
+    const startDow = first.getDay();
+    const daysInMonth = new Date(viewYear, viewMonth+1, 0).getDate();
+
+    for (let i = 0; i < startDow; i++) {
+      const c = document.createElement("div");
+      c.className = "cell empty"; grid.appendChild(c);
+    }
+    for (let d = 1; d <= daysInMonth; d++) {
+      const cur = ymd(viewYear, viewMonth, d);
+      const n = diffDays(cur, target);
+      const c = document.createElement("div");
+      c.className = "cell";
+      if (n === 0) c.classList.add("target", "zero");
+      if (diffDays(cur, today) === 0) c.classList.add("today");
+      const label = n === 0 ? "0" : (n > 0 ? "+" + n : n);
+      c.innerHTML = `<div class="d">${d}</div><div class="cnt">${label}</div>`;
+      grid.appendChild(c);
+    }
+  }
+
+  function render() { renderSummary(); renderCalendar(); }
+
+  selectEl.addEventListener("change", e => { selectedIdx = +e.target.value; render(); });
+  document.getElementById("prev").addEventListener("click", () => {
+    viewMonth--; if (viewMonth < 0) { viewMonth = 11; viewYear--; } renderCalendar();
+  });
+  document.getElementById("next").addEventListener("click", () => {
+    viewMonth++; if (viewMonth > 11) { viewMonth = 0; viewYear++; } renderCalendar();
+  });
+  document.getElementById("todayBtn").addEventListener("click", () => {
+    viewYear = today.getFullYear(); viewMonth = today.getMonth(); renderCalendar();
+  });
+
+  // 開啟時定位到今天所在的月份
+  viewYear = today.getFullYear();
+  viewMonth = today.getMonth();
+  render();
+</script>
+</body>
+</html>
