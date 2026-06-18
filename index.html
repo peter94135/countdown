@@ -124,9 +124,37 @@
   .legend { margin-top: 14px; font-size: .75rem; color: var(--muted); text-align: center; line-height: 1.6; }
   .legend b { color: var(--today); }
   .status { text-align: center; color: var(--muted); padding: 30px 0; }
+
+  /* 密碼鎖 */
+  #gate {
+    position: fixed; inset: 0; z-index: 99;
+    background: linear-gradient(160deg, var(--bg1), var(--bg2));
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 24px; text-align: center;
+  }
+  #gate .lock { font-size: 3rem; margin-bottom: 8px; }
+  #gate h2 { font-size: 1.2rem; font-weight: 600; margin: 0 0 22px; }
+  #gate .pin {
+    width: 200px; letter-spacing: 14px; text-align: center;
+    font-size: 2rem; padding: 12px 0 12px 14px;
+    background: var(--cell); color: var(--text);
+    border: 1px solid var(--cell-line); border-radius: 12px;
+  }
+  #gate .pin:focus { outline: 2px solid var(--accent); }
+  #gate .err { color: var(--accent); height: 20px; margin-top: 12px; font-size: .9rem; }
+  #gate .hint { color: var(--muted); font-size: .78rem; margin-top: 6px; }
+  .app-hidden { display: none !important; }
 </style>
 </head>
 <body>
+<div id="gate">
+  <div class="lock">🔒</div>
+  <h2>請輸入密碼</h2>
+  <input class="pin" id="pinInput" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="••••">
+  <div class="err" id="pinErr"></div>
+  <div class="hint">提示：一個對你們很重要的日子 💗</div>
+</div>
+
 <div class="wrap">
   <h1>子豪 <span class="heart">❤</span> 佳佩 ｜ 紀念日天數</h1>
 
@@ -340,7 +368,7 @@
   });
 
   // ---------- 啟動：必要時建立預設、再即時監聽 ----------
-  (async () => {
+  async function start() {
     try {
       const snap = await getDocs(q);
       if (snap.empty) {
@@ -358,7 +386,45 @@
     }, err => {
       statusEl.textContent = "⚠️ 同步失敗：" + err.message;
     });
-  })();
+  }
+
+  // ---------- 密碼鎖 ----------
+  const PASSCODE = "1224";
+  const gate = document.getElementById("gate");
+  const pinInput = document.getElementById("pinInput");
+  const pinErr = document.getElementById("pinErr");
+  let started = false;
+
+  function unlock() {
+    gate.classList.add("app-hidden");
+    try { localStorage.setItem("cd_unlocked", "1"); } catch (e) {}
+    if (!started) { started = true; start(); }
+  }
+
+  function tryPin() {
+    if (pinInput.value === PASSCODE) {
+      pinErr.textContent = "";
+      unlock();
+    } else {
+      pinErr.textContent = "密碼錯誤，再試一次";
+      pinInput.value = "";
+    }
+  }
+
+  pinInput.addEventListener("input", () => {
+    pinErr.textContent = "";
+    if (pinInput.value.length === 4) tryPin();
+  });
+
+  // 這台裝置已解鎖過就直接進入
+  let remembered = false;
+  try { remembered = localStorage.getItem("cd_unlocked") === "1"; } catch (e) {}
+  if (remembered) {
+    gate.classList.add("app-hidden");
+    started = true; start();
+  } else {
+    pinInput.focus();
+  }
 </script>
 </body>
 </html>
