@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>紀念日計算 💗</title>
+<title>子豪 ❤ 佳佩 ｜ 紀念日天數</title>
 <style>
   :root {
     --bg1: #1b2030;
@@ -32,7 +32,7 @@
   .controls {
     display: flex; gap: 10px; align-items: center;
     background: var(--cell); border: 1px solid var(--cell-line);
-    border-radius: 14px; padding: 12px; margin-bottom: 14px;
+    border-radius: 14px; padding: 12px; margin-bottom: 12px;
   }
   select {
     flex: 1; appearance: none;
@@ -40,19 +40,52 @@
     border: 1px solid var(--cell-line); border-radius: 10px;
     padding: 11px 14px; font-size: 1rem; font-family: inherit;
   }
+  .iconbtn {
+    background: var(--accent); color: #fff; border: none;
+    width: 44px; height: 44px; border-radius: 10px; font-size: 1.4rem;
+    cursor: pointer; flex: none; line-height: 1;
+  }
+
+  /* 新增表單 */
+  .addbox {
+    background: var(--cell); border: 1px solid var(--cell-line);
+    border-radius: 14px; padding: 12px; margin-bottom: 14px;
+    display: none; flex-direction: column; gap: 10px;
+  }
+  .addbox.open { display: flex; }
+  .addbox label { font-size: .8rem; color: var(--muted); }
+  .addbox input {
+    width: 100%; background: var(--bg2); color: var(--text);
+    border: 1px solid var(--cell-line); border-radius: 10px;
+    padding: 11px 12px; font-size: 1rem; font-family: inherit;
+  }
+  .addbox .row { display: flex; gap: 10px; }
+  .addbox .row button {
+    flex: 1; border: none; border-radius: 10px; padding: 11px;
+    font-size: 1rem; cursor: pointer; font-family: inherit;
+  }
+  .btn-save { background: var(--accent); color: #fff; }
+  .btn-cancel { background: var(--cell-line); color: var(--text); }
 
   .summary {
     background: var(--accent-soft);
     border: 1px solid rgba(255,111,165,0.35);
     border-radius: 14px; padding: 14px 16px; margin-bottom: 16px;
+    position: relative;
   }
-  .summary .name { font-size: 1.05rem; font-weight: 600; }
+  .summary .name { font-size: 1.05rem; font-weight: 600; padding-right: 70px; }
   .summary .date { font-size: .85rem; color: var(--muted); margin-top: 2px; }
   .summary .big {
     font-size: 2.4rem; font-weight: 700; color: var(--accent);
     margin-top: 6px; line-height: 1.1;
   }
   .summary .big small { font-size: .9rem; color: var(--text); font-weight: 500; }
+  .summary .del {
+    position: absolute; top: 12px; right: 12px;
+    background: transparent; border: 1px solid var(--cell-line);
+    color: var(--muted); border-radius: 8px; padding: 5px 9px;
+    font-size: .78rem; cursor: pointer;
+  }
 
   .calhead {
     display: flex; align-items: center; justify-content: space-between;
@@ -90,6 +123,7 @@
 
   .legend { margin-top: 14px; font-size: .75rem; color: var(--muted); text-align: center; line-height: 1.6; }
   .legend b { color: var(--today); }
+  .status { text-align: center; color: var(--muted); padding: 30px 0; }
 </style>
 </head>
 <body>
@@ -98,38 +132,80 @@
 
   <div class="controls">
     <select id="eventSelect"></select>
+    <button class="iconbtn" id="addToggle" title="新增紀念日">＋</button>
   </div>
 
-  <div class="summary" id="summary"></div>
-
-  <div class="calhead">
-    <button class="navbtn" id="prev">‹</button>
-    <span class="title" id="monthTitle"></span>
+  <div class="addbox" id="addBox">
     <div>
-      <button class="navbtn" id="next">›</button>
-      <button class="today-btn" id="todayBtn">今天</button>
+      <label>紀念日名稱</label>
+      <input type="text" id="newName" placeholder="例如：交往一週年 🎉" maxlength="30">
+    </div>
+    <div>
+      <label>日期</label>
+      <input type="date" id="newDate">
+    </div>
+    <div class="row">
+      <button class="btn-cancel" id="addCancel">取消</button>
+      <button class="btn-save" id="addSave">新增</button>
     </div>
   </div>
 
-  <div class="grid" id="dowRow"></div>
-  <div class="grid" id="calGrid" style="margin-top:5px;"></div>
+  <div id="mainArea" style="display:none;">
+    <div class="summary" id="summary"></div>
 
-  <div class="legend">
-    每格小字＝距離該事件的天數（負數＝還沒到，正數＝已過）<br>
-    <b>粉紅外框＝今天</b>　·　粉紅滿底＝事件當天
+    <div class="calhead">
+      <button class="navbtn" id="prev">‹</button>
+      <span class="title" id="monthTitle"></span>
+      <div>
+        <button class="navbtn" id="next">›</button>
+        <button class="today-btn" id="todayBtn">今天</button>
+      </div>
+    </div>
+
+    <div class="grid" id="dowRow"></div>
+    <div class="grid" id="calGrid" style="margin-top:5px;"></div>
+
+    <div class="legend">
+      每格小字＝距離該事件的天數（負數＝還沒到，正數＝已過）<br>
+      <b>粉紅外框＝今天</b>　·　粉紅滿底＝事件當天<br>
+      新增 / 刪除會即時同步給兩個人 ☁️
+    </div>
   </div>
+
+  <div class="status" id="status">☁️ 連線中…</div>
 </div>
 
-<script>
-  // 事件清單：日期格式 年/月/日
-  const events = [
-    { name: "在一起 💗",             date: "2025/12/24" },
-    { name: "第一次見面",            date: "2025/12/09" },
-    { name: "Dcard 抽到彼此",        date: "2025/10/27" },
-    { name: "佳佩生日 🎂",           date: "2000/12/21" },
-    { name: "子豪生日 🎂",           date: "1998/10/10" },
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+  import {
+    getFirestore, collection, query, orderBy, onSnapshot,
+    addDoc, deleteDoc, doc, getDocs
+  } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCrdFnHxMhP6cAaqQ4BtfdHTbYpK-_jFuY",
+    authDomain: "countdown-31196.firebaseapp.com",
+    projectId: "countdown-31196",
+    storageBucket: "countdown-31196.firebasestorage.app",
+    messagingSenderId: "832401963820",
+    appId: "1:832401963820:web:11e625b707900e03ee8a89"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const col = collection(db, "anniversaries");
+  const q = query(col, orderBy("order"));
+
+  // 第一次使用時自動建立的預設紀念日
+  const DEFAULTS = [
+    { name: "在一起 💗",      date: "2025/12/24" },
+    { name: "第一次見面",     date: "2025/12/09" },
+    { name: "Dcard 抽到彼此", date: "2025/10/27" },
+    { name: "佳佩生日 🎂",    date: "2000/12/21" },
+    { name: "子豪生日 🎂",    date: "1998/10/10" },
   ];
 
+  // ---------- 日期工具 ----------
   const MS = 86400000;
   function ymd(y, m, d) { return new Date(y, m, d); }
   function parse(s) { const [y,m,d] = s.split("/").map(Number); return ymd(y, m-1, d); }
@@ -137,14 +213,14 @@
   function diffDays(a, b) { return Math.round((midnight(a) - midnight(b)) / MS); }
 
   const today = midnight(new Date());
-  let viewYear, viewMonth, selectedIdx = 0;
+  let viewYear = today.getFullYear(), viewMonth = today.getMonth();
+  let events = [];          // {id, name, date}
+  let selectedId = null;
 
+  // ---------- DOM ----------
   const selectEl = document.getElementById("eventSelect");
-  events.forEach((e, i) => {
-    const o = document.createElement("option");
-    o.value = i; o.textContent = `${e.name}（${e.date}）`;
-    selectEl.appendChild(o);
-  });
+  const mainArea = document.getElementById("mainArea");
+  const statusEl = document.getElementById("status");
 
   const dows = ["日","一","二","三","四","五","六"];
   const dowRow = document.getElementById("dowRow");
@@ -153,29 +229,45 @@
     el.className = "dow"; el.textContent = d; dowRow.appendChild(el);
   });
 
+  function selectedEvent() {
+    return events.find(e => e.id === selectedId) || events[0];
+  }
+
+  function renderOptions() {
+    selectEl.innerHTML = "";
+    events.forEach(e => {
+      const o = document.createElement("option");
+      o.value = e.id; o.textContent = `${e.name}（${e.date}）`;
+      selectEl.appendChild(o);
+    });
+    if (selectedEvent()) selectEl.value = selectedEvent().id;
+  }
+
   function renderSummary() {
-    const ev = events[selectedIdx];
-    const t = parse(ev.date);
-    const n = diffDays(today, t);
+    const ev = selectedEvent();
+    if (!ev) return;
+    const n = diffDays(today, parse(ev.date));
     let text;
     if (n === 0) text = `<small>就是今天！</small>`;
     else if (n > 0) text = `${n}<small> 天前</small>`;
     else text = `${-n}<small> 天後</small>`;
     document.getElementById("summary").innerHTML =
-      `<div class="name">${ev.name}</div>
+      `<button class="del" id="delBtn">🗑 刪除</button>
+       <div class="name">${ev.name}</div>
        <div class="date">目標日期：${ev.date}</div>
        <div class="big">${text}</div>`;
+    document.getElementById("delBtn").addEventListener("click", () => deleteEvent(ev));
   }
 
   function renderCalendar() {
-    const ev = events[selectedIdx];
+    const ev = selectedEvent();
+    if (!ev) return;
     const target = parse(ev.date);
     const grid = document.getElementById("calGrid");
     grid.innerHTML = "";
     document.getElementById("monthTitle").textContent = `${viewYear} 年 ${viewMonth+1} 月`;
 
-    const first = ymd(viewYear, viewMonth, 1);
-    const startDow = first.getDay();
+    const startDow = ymd(viewYear, viewMonth, 1).getDay();
     const daysInMonth = new Date(viewYear, viewMonth+1, 0).getDate();
 
     for (let i = 0; i < startDow; i++) {
@@ -195,9 +287,32 @@
     }
   }
 
-  function render() { renderSummary(); renderCalendar(); }
+  function renderAll() {
+    if (events.length === 0) {
+      mainArea.style.display = "none";
+      statusEl.style.display = "block";
+      statusEl.textContent = "還沒有任何紀念日，點右上角 ＋ 新增一個吧！";
+      return;
+    }
+    statusEl.style.display = "none";
+    mainArea.style.display = "block";
+    if (!selectedEvent()) selectedId = events[0].id;
+    renderOptions();
+    renderSummary();
+    renderCalendar();
+  }
 
-  selectEl.addEventListener("change", e => { selectedIdx = +e.target.value; render(); });
+  // ---------- 事件操作 ----------
+  async function addEvent(name, dateStr) {
+    await addDoc(col, { name, date: dateStr, order: Date.now() });
+  }
+  async function deleteEvent(ev) {
+    if (!confirm(`確定要刪除「${ev.name}」嗎？兩個人都會看不到喔。`)) return;
+    await deleteDoc(doc(db, "anniversaries", ev.id));
+  }
+
+  // ---------- UI 綁定 ----------
+  selectEl.addEventListener("change", e => { selectedId = e.target.value; renderSummary(); renderCalendar(); });
   document.getElementById("prev").addEventListener("click", () => {
     viewMonth--; if (viewMonth < 0) { viewMonth = 11; viewYear--; } renderCalendar();
   });
@@ -208,10 +323,42 @@
     viewYear = today.getFullYear(); viewMonth = today.getMonth(); renderCalendar();
   });
 
-  // 開啟時定位到今天所在的月份
-  viewYear = today.getFullYear();
-  viewMonth = today.getMonth();
-  render();
+  const addBox = document.getElementById("addBox");
+  document.getElementById("addToggle").addEventListener("click", () => addBox.classList.toggle("open"));
+  document.getElementById("addCancel").addEventListener("click", () => addBox.classList.remove("open"));
+  document.getElementById("addSave").addEventListener("click", async () => {
+    const name = document.getElementById("newName").value.trim();
+    const dval = document.getElementById("newDate").value; // YYYY-MM-DD
+    if (!name) { alert("請輸入名稱"); return; }
+    if (!dval) { alert("請選擇日期"); return; }
+    try {
+      await addEvent(name, dval.replace(/-/g, "/"));
+      document.getElementById("newName").value = "";
+      document.getElementById("newDate").value = "";
+      addBox.classList.remove("open");
+    } catch (err) { alert("新增失敗：" + err.message); }
+  });
+
+  // ---------- 啟動：必要時建立預設、再即時監聽 ----------
+  (async () => {
+    try {
+      const snap = await getDocs(q);
+      if (snap.empty) {
+        for (let i = 0; i < DEFAULTS.length; i++) {
+          await addDoc(col, { ...DEFAULTS[i], order: i + 1 });
+        }
+      }
+    } catch (err) {
+      statusEl.textContent = "⚠️ 連線資料庫失敗：" + err.message;
+      return;
+    }
+    onSnapshot(q, snap => {
+      events = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderAll();
+    }, err => {
+      statusEl.textContent = "⚠️ 同步失敗：" + err.message;
+    });
+  })();
 </script>
 </body>
 </html>
