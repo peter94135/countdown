@@ -16,7 +16,9 @@
     --cell: rgba(255,255,255,0.04);
     --cell-line: rgba(255,255,255,0.07);
   }
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  /* touch-action: manipulation 關掉 iOS 連點兩下放大，雙指縮放仍可用 */
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  button { -webkit-user-select: none; user-select: none; }
   body {
     margin: 0;
     min-height: 100vh;
@@ -88,20 +90,26 @@
   }
 
   .calhead {
-    display: flex; align-items: center; justify-content: space-between;
+    display: flex; align-items: center; gap: 6px;
     margin-bottom: 10px;
   }
-  .calhead .title { font-size: 1.1rem; font-weight: 600; }
+  .ympick { flex: 1; display: flex; gap: 6px; min-width: 0; }
+  /* 字體維持 16px，iOS 點選單時才不會自動放大 */
+  .ympick select {
+    min-width: 0; height: 38px; padding: 0 6px;
+    font-size: 16px; font-weight: 600; text-align: center; text-align-last: center;
+  }
+  .ympick #yearSel { flex: 1.3; }
   .navbtn {
     background: var(--cell); border: 1px solid var(--cell-line);
     color: var(--text); width: 38px; height: 38px; border-radius: 10px;
-    font-size: 1.1rem; cursor: pointer;
+    font-size: 1.1rem; cursor: pointer; flex: none;
   }
   .navbtn:active { background: var(--accent-soft); }
   .today-btn {
     background: var(--accent); color: #fff; border: none;
-    border-radius: 10px; padding: 0 14px; height: 38px; font-size: .9rem;
-    cursor: pointer; margin-left: 8px;
+    border-radius: 10px; padding: 0 12px; height: 38px; font-size: .9rem;
+    cursor: pointer; flex: none;
   }
 
   .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
@@ -183,11 +191,12 @@
 
     <div class="calhead">
       <button class="navbtn" id="prev">‹</button>
-      <span class="title" id="monthTitle"></span>
-      <div>
-        <button class="navbtn" id="next">›</button>
-        <button class="today-btn" id="todayBtn">今天</button>
+      <div class="ympick">
+        <select id="yearSel" aria-label="年份"></select>
+        <select id="monthSel" aria-label="月份"></select>
       </div>
+      <button class="navbtn" id="next">›</button>
+      <button class="today-btn" id="todayBtn">今天</button>
     </div>
 
     <div class="grid" id="dowRow"></div>
@@ -287,13 +296,37 @@
     document.getElementById("delBtn").addEventListener("click", () => deleteEvent(ev));
   }
 
+  // ---------- 年 / 月選單 ----------
+  const yearSel = document.getElementById("yearSel");
+  const monthSel = document.getElementById("monthSel");
+  for (let m = 0; m < 12; m++) {
+    const o = document.createElement("option");
+    o.value = m; o.textContent = `${m+1} 月`;
+    monthSel.appendChild(o);
+  }
+
+  // 年份範圍：最早的紀念日往前 2 年，到今年往後 30 年
+  function renderYearOptions() {
+    const years = events.map(e => +e.date.slice(0, 4));
+    const lo = Math.min(today.getFullYear(), viewYear, ...years) - 2;
+    const hi = Math.max(today.getFullYear() + 30, viewYear);
+    yearSel.innerHTML = "";
+    for (let y = lo; y <= hi; y++) {
+      const o = document.createElement("option");
+      o.value = y; o.textContent = `${y} 年`;
+      yearSel.appendChild(o);
+    }
+    yearSel.value = viewYear;
+  }
+
   function renderCalendar() {
     const ev = selectedEvent();
     if (!ev) return;
     const target = parse(ev.date);
     const grid = document.getElementById("calGrid");
     grid.innerHTML = "";
-    document.getElementById("monthTitle").textContent = `${viewYear} 年 ${viewMonth+1} 月`;
+    renderYearOptions();
+    monthSel.value = viewMonth;
 
     const startDow = ymd(viewYear, viewMonth, 1).getDay();
     const daysInMonth = new Date(viewYear, viewMonth+1, 0).getDate();
@@ -350,6 +383,8 @@
   document.getElementById("todayBtn").addEventListener("click", () => {
     viewYear = today.getFullYear(); viewMonth = today.getMonth(); renderCalendar();
   });
+  yearSel.addEventListener("change", e => { viewYear = +e.target.value; renderCalendar(); });
+  monthSel.addEventListener("change", e => { viewMonth = +e.target.value; renderCalendar(); });
 
   const addBox = document.getElementById("addBox");
   document.getElementById("addToggle").addEventListener("click", () => addBox.classList.toggle("open"));
