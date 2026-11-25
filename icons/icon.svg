@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0.6" y2="1">
+      <stop offset="0" stop-color="#232a3d"/>
+      <stop offset="1" stop-color="#151a27"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.55" r="0.5">
+      <stop offset="0" stop-color="#ff6fa5" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#ff6fa5" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="head" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ff8dbb"/>
+      <stop offset="1" stop-color="#ff5c97"/>
+    </linearGradient>
+    <linearGradient id="heart" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#ff86b6"/>
+      <stop offset="1" stop-color="#ff3f82"/>
+    </linearGradient>
+    <clipPath id="card">
+      <rect x="212" y="262" width="600" height="560" rx="96"/>
+    </clipPath>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="22"/>
+      <feOffset dy="18" result="b"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.45"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- 背景：跟網頁一樣的深藍 + 中間淡淡粉紅光 -->
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <rect width="1024" height="1024" fill="url(#glow)"/>
+
+  <!-- 日曆紙 -->
+  <g filter="url(#shadow)">
+    <rect x="212" y="262" width="600" height="560" rx="96" fill="#fbf6f9"/>
+  </g>
+  <rect x="212" y="262" width="600" height="172" fill="url(#head)" clip-path="url(#card)"/>
+
+  <!-- 日曆扣環 -->
+  <rect x="350" y="200" width="48" height="128" rx="24" fill="#f3edf2" stroke="#d9cfd8" stroke-width="6"/>
+  <rect x="626" y="200" width="48" height="128" rx="24" fill="#f3edf2" stroke="#d9cfd8" stroke-width="6"/>
+
+  <!-- 愛心 -->
+  <path transform="translate(372 486) scale(2.8)" fill="url(#heart)"
+        d="M50 88 C20 66 4 50 4 32 C4 18 15 8 28 8 C38 8 46 14 50 22 C54 14 62 8 72 8 C85 8 96 18 96 32 C96 50 80 66 50 88 Z"/>
+  <!-- 愛心上的小亮點 -->
+  <ellipse cx="452" cy="552" rx="30" ry="18" fill="#ffffff" fill-opacity="0.45" transform="rotate(-35 452 552)"/>
+</svg>
